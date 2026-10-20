@@ -1,0 +1,5 @@
+level,full_sim_target,stored_sigma,stored_bias,tau_d,stored_error,fitted_sigma,fitted_bias,scale_fitted_over_stored
+requirements_sim,0.26225,1.1,0.45,5.0,0.26521,1.0801,0.4419,0.982
+ratio_sim,0.33294,1.75,0.7,5.0,0.33326,1.7456,0.6982,0.997
+metrology_sim,0.08948,0.3,0.12,5.0,0.09043,0.2967,0.1187,0.989
+limit_sim,0.02655,0.12,0.018,5.0,0.02693,0.1182,0.0177,0.985

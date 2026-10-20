@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+data_prep/raw/
+figures/*.aux
+figures/*.log
+.DS_Store

@@ -1,0 +1,8 @@
+# Versions used to produce the article results (Python 3.13).
+numpy==2.5.3
+scipy==1.18.1
+healpy==1.20.1
+astropy==8.0.1
+zodipy==1.1.5
+matplotlib==3.11.2
+pytest==9.1.1
