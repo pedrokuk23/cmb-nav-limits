@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article and this repository."
 title: "cmb-nav-limits: simulator and studies for CMB dipole velocimetry in autonomous deep-space navigation"
-version: 1.0.1
+version: 1.0.2
 date-released: 2026-10-21
 license: MIT
 repository-code: "https://github.com/pedrokuk23/cmb-nav-limits"
