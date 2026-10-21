@@ -30,8 +30,9 @@ AU = ph.AU_KM
 DAY = ph.DAY
 YEAR = 365.25 * DAY
 
-# Abstract CMB levels (white-noise σ_day [m/s], bias σ [m/s], bias τ [days]). Calibrated with
-# calibration_case() against the full-simulator 1/f study (studies/one_over_f_study.py; 60 d gap, 0.3 m/s anomaly).
+# Abstract CMB levels (white-noise σ_day [m/s], bias σ [m/s], bias τ [days]), matched with calibration_case()
+# (60 d gap, 0.3 m/s anomaly) to the full simulator: the first levels to studies/one_over_f_study.py, the *_sim
+# levels to the full-simulator CMB levels (studies/deep_space_calibration_fit.py reproduces their calibration).
 CMB_LEVELS = {
     "realistic": (8.0, 3.0, 5.0),      # family D with all systematics: no improvement over dynamics only
     "requirements": (0.6, 0.15, 5.0),   # NET 0.3 + chopper + 0.1″ + 1 ppm: ~0.30 × dynamics only
@@ -43,7 +44,7 @@ CMB_LEVELS = {
     "limit": (0.017, 0.002, 5.0),    # practical physical limit: étendue 0.1 m²sr, ~1 mas, ~3 nK
     # the same two levels calibrated against the full simulator (studies/ratio_study.py): ratio method
     # modeled (total power, drifting load, tilted axis), estimated zodiacal scale, real sky; the 4-sensor
-    # instrument and the nuisance parameters cost ~6× in noise per day relative to the analytic estimates
+    # instrument and the nuisance parameters raise the noise per day relative to the analytic estimates
     "requirements_sim": (1.1, 0.45, 5.0),  # 60 d gap: ~0.26 m/s (full simulator, 6 seeds: 0.262)
     "ratio_sim": (1.75, 0.7, 5.0),       # 60 d gap: ~0.33 m/s (full simulator: 0.333)
     "metrology_sim": (0.30, 0.12, 5.0),  # 60 d gap: 0.090 m/s (full simulator: 0.0895)

@@ -64,12 +64,15 @@ from their CSV if interrupted; delete the CSV to start over. `--nproc N` sets th
 | Sec. VI-E, Fig. 7: decomposition of the photon-floor penalty | `python studies/floor_budget_study.py` | `results/floor_budget_study.{csv,md}` | ~20 min |
 | Sec. V-D, Fig. 3: filter consistency (NEES; UKF vs EKF vs particle filter) | `python studies/consistency_study.py` | `results/consistency_study.{csv,md}`, `results/consistency_series.npz` | ~30 min |
 | Sec. VI-B, VI-E: load requirement at the photon-limit level; relativistic velocity composition | `python studies/robustness_study.py` | `results/robustness_study.{csv,md}` | ~1.5 h |
+| Sec. V-B, VI-B: spectral response of the ratio receiver (band-averaged slope κ, physical load stability, κ drift at the photon-limit level) | `python studies/chromatic_study.py` | `results/chromatic_study.{csv,md}` | ~20 min |
+| Sec. VII-D: bootstrap intervals over the seeds for the key comparisons | `python studies/seed_intervals.py` | `results/seed_intervals.{csv,md}` | ~2 min |
 | Figs. 3–7 | `python figures/make_figures.py` | `figures/fig_consistency.pdf`, `fig_timeseries.pdf`, `fig_requirements.pdf`, `fig_ladder.pdf`, `fig_budget.pdf` | seconds |
 
 **Safeguards.** If a requested component cannot run (for example, `healpy` or `zodipy` is missing, or a data file
 is absent), the simulator stops with an error instead of silently using a reduced model; `allow_fallback=True` turns
 this into a warning, and `Results.info["components"]` records what actually ran. Each study that resumes from its CSV
-keeps a code fingerprint in `results/<study>.csv.provenance.json` and refuses to resume rows computed with different
+keeps a fingerprint of the code that produced the rows (the `cmbsim` package, the study script and the study
+modules it imports) in `results/<study>.csv.provenance.json`, and refuses to resume rows computed with different
 code (`--resume-anyway` overrides and records the mix).
 
 `./run_all.sh` runs everything in this order. The `results/` folder already contains the outputs used in the

@@ -383,8 +383,7 @@ def gyro_star_window_sigma(sig_meas_as, avail, frame_hz, n_frames, arw_deg_rth, 
     per-axis filter of Farrenkopf (1978) / Lefferts, Markley & Shuster (1982).
 
     The filter starts from steady state (Riccati iterated to convergence and initial errors drawn
-    from that covariance), with 'chains' chains (default 200); a warm-up that depends on the window
-    length with few chains would give a pessimistic result."""
+    from that covariance), with 'chains' chains (default 200)."""
     dt = 1.0 / frame_hz
     sv = arw_deg_rth * np.pi / 180 / 60                    # rad/√s
     su = bias_deg_h * np.pi / 180 / 3600 / 60              # rad/s/√s: the bias walks B in 1 h

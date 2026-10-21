@@ -14,4 +14,6 @@ python studies/floor_budget_study.py --nproc "$NPROC"
 python studies/consistency_study.py --nproc "$NPROC"
 python studies/deep_space_calibration_fit.py          # needs results/consistency_study.csv
 python studies/robustness_study.py --nproc "$NPROC"
+python studies/chromatic_study.py --nproc "$NPROC"
+python studies/seed_intervals.py
 python figures/make_figures.py

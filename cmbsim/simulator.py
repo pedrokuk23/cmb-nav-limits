@@ -88,7 +88,7 @@ class Config:
     band_frac: float = 0.25          # fractional bandwidth of the detector
     band_err_pct: float = 1.0        # error (1σ) of the band center known on board [%]
     obs_analysis: bool = True        # observability analysis (Fisher information, once per day)
-    filter_type: str = "ukf"         # 'ukf' | 'ekf' (numerical Jacobians) | 'pf' (Gaussian particle, UKF proposal)
+    filter_type: str = "ukf"         # 'ukf' | 'ekf' (central-difference Jacobians) | 'ekf_an' (analytic transition matrix) | 'pf' (Gaussian particle, UKF proposal)
     pf_particles: int = 1000         # particles per update in 'pf'
     rel_truth: bool = False          # relativistic composition of the solar and spacecraft velocities in the truth
     rel_filter: bool = False         # ... and in the on-board model (default: Galilean sum in both)
@@ -183,7 +183,7 @@ class Config:
     load_drift_nK: float = 0.0       # reference load drift (1σ, per sensor) [nK]; 0 = none
     load_tau_h: float = 24.0         # correlation time of the load drift [h]
     load_estimate: bool = True       # the filter estimates the load offset (4 Gauss-Markov states)
-    departure_model: str = "hyperbola"  # 'hyperbola' (perigee at dep_alt_km, Earth and Moon) or 'center' (legacy)
+    departure_model: str = "hyperbola"  # 'hyperbola' (perigee at dep_alt_km, Earth and Moon) or 'center' (Earth center)
     dep_alt_km: float = 300.0        # perigee altitude of the departure hyperbola
     retarget: bool = True            # arrival targeting: true periapsis at Mars with the full dynamics
     rp_alt_km: float = 300.0         # target periapsis altitude [km]
@@ -997,7 +997,7 @@ def run(cfg: Config, progress=None) -> Results:
                 return 0.0
             e_ = ep_err(t) + ep_bias[k_]
             # pointing error in the thrust frame (VNC: velocity, orbit normal, co-normal),
-            # like the misalignment of a body-fixed thruster (previously applied in the inertial frame)
+            # like the misalignment of a body-fixed thruster
             Bv = vnc_basis(xx[..., :3], xx[..., 3:6])
             u_ = Bv[..., 0] + e_[1] * Bv[..., 1] + e_[2] * Bv[..., 2]
             u_ = u_ / np.linalg.norm(u_, axis=-1, keepdims=True)
@@ -1044,7 +1044,7 @@ def run(cfg: Config, progress=None) -> Results:
                 zpos = (zdays, zp_true)
         zd = zodimod.Zodi(nu, jd0, cfg.tof_days, bands=bands, weights=sep_w, positions=zpos)
         zd.traj_info = dict(real=zpos is not None, dev_km=zdev)
-    rng_x = np.random.default_rng(cfg.seed + 5557)            # draws for the new effects (do not change the old ones)
+    rng_x = np.random.default_rng(cfg.seed + 5557)            # own generator: these draws do not change the others
     eps_z = rng_x.normal(0, cfg.zodi_err_pct / 100)            # amplitude error of the on-board zodiacal model
     est_zodi = bool(zd is not None and cfg.zodi_estimate)
     g0 = rng_x.normal(0, cfg.gain_cal_ppm * 1e-6, 4)            # gain calibration error per sensor
@@ -1288,7 +1288,7 @@ def run(cfg: Config, progress=None) -> Results:
         return any(a_ * ph.DAY <= t_ < b_ * ph.DAY for a_, b_ in gaps_d)
     n_dsn_gap = 0
     if cfg.dsn_pass_days and cfg.dsn_pass_days > 0:
-        rng_dsn = np.random.default_rng(cfg.seed + 3343)        # (formerly + 3331, the same seed as the 1/f)
+        rng_dsn = np.random.default_rng(cfg.seed + 3343)
         for t0_ in np.arange(t_start + cfg.dsn_pass_days * ph.DAY, t_end, cfg.dsn_pass_days * ph.DAY):
             if rng_dsn.random() * 100 < cfg.dsn_loss_pct:
                 continue                                       # pass cancelled
@@ -1553,8 +1553,8 @@ def run(cfg: Config, progress=None) -> Results:
             Xs[:, ISD] *= np.exp(-dt / tau_sdb)
         if est_load:
             Xs[:, ILd] *= np.exp(-dt / tau_ld)
-        if est_drift:                                # without drift estimation the state stays frozen (P0 ~1e-12):
-            Xs[:, IAd] *= np.exp(-dt / att.tc)        # decaying without Q drove P to ~1e-54 and the UKF to NaN
+        if est_drift:                                # Gauss-Markov decay of the drift states
+            Xs[:, IAd] *= np.exp(-dt / att.tc)
         if est_ep and hold.get("ep_flag", False):     # thrust bias: constant acceleration over the step, in VNC
             a_e = np.einsum("nij,nj->ni", vnc_basis(Xs[:, :3], Xs[:, 3:6]), Xs[:, IE])
             Xs[:, :3] += 0.5 * a_e * dt**2
@@ -1654,7 +1654,7 @@ def run(cfg: Config, progress=None) -> Results:
         los = ph.unit(rb[None, :, :] - Xs[:, None, :3])
         return np.arccos(np.clip(np.sum(los * STARS[None], axis=-1), -1, 1))
 
-    # R consistent with the truth error (previously R = (0.001°)² = (3.6″)², with the truth at 0.5″)
+    # R consistent with the truth error
     R_cel = np.eye(3) * (cfg.celenav_err_arcsec * ph.ARCSEC) ** 2
     rng_cel = np.random.default_rng(cfg.seed + 6007)
     if cfg.filter_type == "ekf":

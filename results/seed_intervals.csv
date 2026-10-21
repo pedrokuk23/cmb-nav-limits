@@ -1,0 +1,10 @@
+scenario,case,n_seeds,rms,lo68,hi68,per_seed
+"60-day gap, 1.5 AU (velocity error, end of gap)",CMB photon limit,6,0.02655,0.018,0.03235,0.0214 0.0094 0.0111 0.0307 0.0497 0.0122
+"60-day gap, 1.5 AU (velocity error, end of gap)",IMU,6,0.00637,0.00532,0.00727,0.0089 0.0093 0.0024 0.005 0.005 0.0047
+"60-day gap, 1.5 AU (velocity error, end of gap)",XNAV,6,0.00276,0.00255,0.00295,0.0022 0.0029 0.0032 0.0017 0.0031 0.0031
+"60-day gap, 1.5 AU (velocity error, end of gap)",Dynamics only,6,0.53273,0.48386,0.57783,0.6285 0.4121 0.5496 0.6858 0.4787 0.3694
+"100 AU, monthly DSN (plane-of-sky velocity error)",Monthly DSN,6,0.03362,0.02785,0.03837,0.023197 0.018297 0.04128 0.049627 0.011196 0.040201
+"100 AU, monthly DSN (plane-of-sky velocity error)",+ CMB limit_sim,6,0.01667,0.01411,0.01891,0.02265 0.013034 0.0098941 0.024222 0.013868 0.010328
+"100 AU, autonomous after day 30, anomaly (plane-of-sky velocity error)",IMU,6,0.04158,0.02975,0.05073,0.016235 0.019768 0.073846 0.019666 0.021468 0.058466
+"100 AU, autonomous after day 30, anomaly (plane-of-sky velocity error)",XNAV,6,0.00342,0.00304,0.00377,0.0043422 0.0037198 0.004385 0.00208 0.0029001 0.0023771
+"100 AU, autonomous after day 30, anomaly (plane-of-sky velocity error)",CMB limit_sim,6,0.02283,0.01999,0.02533,0.016435 0.011547 0.023969 0.019965 0.027561 0.031497

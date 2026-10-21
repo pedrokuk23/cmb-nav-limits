@@ -104,8 +104,7 @@ def planck_residual_rms(fwhm_deg, map_depth_uK_arcmin=42.0, foreground_uK=1.0):
     map_depth: map noise in µK·arcmin (Planck 143 GHz: goal of 0.7 µK·deg ≈ 42 µK·arcmin).
     foreground: foreground/systematics residual at degree scales [µK] (assumption).
     The white map noise seen by a Gaussian beam of solid angle Ω = 1.133·FWHM²
-    is w/√(2Ω) (the variance of smoothed white noise is w²/(4πσ²) = w²/(2Ω); previously w/√Ω,
-    conservative by √2).
+    is w/√(2Ω) (the variance of smoothed white noise is w²/(4πσ²) = w²/(2Ω)).
     """
     fwhm_arcmin = fwhm_deg * 60.0
     white = map_depth_uK_arcmin / np.sqrt(2 * 1.133 * fwhm_arcmin**2)

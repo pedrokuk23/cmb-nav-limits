@@ -25,8 +25,7 @@ def belt(seed: int = 2026, n: int = 3200, h_min: float = 3.0, h_max: float = 11.
     """SYNTHETIC population of bright main-belt asteroids (mean Keplerian elements).
 
     Cumulative count N(<H) ∝ 10^(slope·H) between h_min and h_max, with n objects: the defaults give N(<9) ≈ 400
-    and N(<11) ≈ 3200, the order of magnitude of the real counts [est.; ~200 objects with D > 100 km]. A smaller
-    population (300 objects, H ≥ 5.5) left the probe without beacons in the first weeks.
+    and N(<11) ≈ 3200, the order of magnitude of the real counts [est.; ~200 objects with D > 100 km].
     The elements lie in the typical ranges of the belt. They are not real objects: they provide the density and
     geometry of beacons that a navigation camera would see (tens visible down to magnitude ~10-11)."""
     rng = np.random.default_rng(seed)
