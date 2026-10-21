@@ -97,13 +97,12 @@ def sep_angle_deg(r_sc, r_earth):
 
 def plasma_allan_x(sep_deg):
     """Allan deviation (60 s) of the X-band Doppler due to solar plasma, Cassini empirical model
-    (Iess/Zannoni, ISSFD 2012). Exponents to be checked against the original (extracted from a PDF with
-    corrupted text)."""
+    (Iess et al., ISSFD 2012, eq. 2), piecewise in the Sun-Earth-probe angle."""
     s = np.sin(np.deg2rad(np.clip(sep_deg, 0.5, 180.0)))
     if sep_deg <= 90:
         return 1.76e-14 * s**-1.98 + 6.25e-14 * s**0.06
     if sep_deg <= 170:
-        return 1.76e-14 + 6.25e-14 * s**1.05
+        return (1.76e-14 + 6.25e-14) * s**1.05
     return 1.27e-14
 
 

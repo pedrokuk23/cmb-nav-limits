@@ -87,6 +87,22 @@ def dipole_factor(v_obs, n_hat):
     return np.sqrt(1.0 - np.sum(beta * beta, axis=-1)) / (1.0 - np.sum(beta * n_hat, axis=-1))
 
 
+def compose_velocity(u, v, relativistic=False):
+    """Velocity relative to the CMB frame of an observer moving at v [km/s] relative to the barycenter, which moves
+    at u relative to the CMB frame. Galilean sum u + v, or the relativistic composition u ⊕ v (Einstein velocity
+    addition, u and v in the CMB and barycentric frames; the Thomas-Wigner rotation, |u×v|/2c² ~ 0.01″, is
+    neglected)."""
+    u = np.asarray(u, float)
+    v = np.asarray(v, float)
+    if not relativistic:
+        return u + v
+    c2 = C_KMS ** 2
+    uu = np.sum(u * u, axis=-1, keepdims=True)
+    uv = np.sum(u * v, axis=-1, keepdims=True)
+    g = 1.0 / np.sqrt(1.0 - uu / c2)
+    return (u + v / g + (g / (1.0 + g)) * (uv / c2) * u) / (1.0 + uv / c2)
+
+
 H_PLANCK, K_BOLTZ = 6.62607015e-34, 1.380649e-23
 
 

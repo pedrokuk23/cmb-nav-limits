@@ -588,3 +588,21 @@ def test_missing_component_is_not_silent(monkeypatch):
         r = S.run(S.Config(**kw, allow_fallback=True))
     c = r.info["components"]
     assert c["sky_real"] is False and c["zodi"] is False and len(c["fallbacks"]) == 2
+
+
+def test_plasma_model_continuous():
+    """Cassini plasma model (Iess et al. 2012, eq. 2): the three branches join at SEP = 90° and 170°."""
+    from cmbsim.beacons import plasma_allan_x as f
+    assert np.isclose(f(90.0), f(90.0 + 1e-9), rtol=1e-6)
+    assert np.isclose(f(170.0), 1.27e-14, rtol=0.02)
+
+
+def test_relativistic_velocity_composition():
+    """Einstein velocity addition: reduces to the Galilean sum at low speed; parallel case matches the 1-D formula."""
+    u = np.array([370.0, 0.0, 0.0])
+    v = np.array([30.0, 0.0, 0.0])
+    w = ph.compose_velocity(u, v, relativistic=True)
+    c = ph.C_KMS
+    assert np.isclose(w[0], (370.0 + 30.0) / (1 + 370.0 * 30.0 / c**2), rtol=1e-14)
+    assert np.allclose(ph.compose_velocity(u * 1e-6, v * 1e-6, True), (u + v) * 1e-6, rtol=1e-10)
+    assert np.allclose(ph.compose_velocity(u, v, False), u + v)

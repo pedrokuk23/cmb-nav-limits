@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article and this repository."
 title: "cmb-nav-limits: simulator and studies for CMB dipole velocimetry in autonomous deep-space navigation"
-version: 1.0.0
-date-released: 2026-10-20
+version: 1.0.1
+date-released: 2026-10-21
 license: MIT
 repository-code: "https://github.com/pedrokuk23/cmb-nav-limits"
 authors:
@@ -15,6 +15,8 @@ preferred-citation:
   authors:
     - family-names: "Kukulka de Albuquerque"
       given-names: "Pedro"
+    - family-names: "Galembeck"
+      given-names: "Lucas"
   journal: "IEEE Access"
   year: 2026
   notes: "Submitted"

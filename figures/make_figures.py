@@ -57,20 +57,22 @@ def fig_photon_limit():
     """Fig. 1: sigma_v = c / sqrt(F_G G tau), F_G = (2/3) (k T0 / h)^3 4! zeta(4) / c^2."""
     f_g = (2 / 3) * (K_B * T0 / H_P) ** 3 * ZETA4_24 / C_LIGHT ** 2
     tau = np.logspace(np.log10(600), np.log10(30 * 86400), 200)
-    fig, ax = plt.subplots(figsize=(3.5, 2.6))
+    fig, ax = plt.subplots(figsize=(3.4, 3.1))
     for g, ls in [(1e-3, ":"), (1e-2, "-."), (1e-1, "--"), (1, "-")]:
         ax.loglog(tau / 86400, C_LIGHT / np.sqrt(f_g * g * tau), "k", ls=ls, lw=1, label=f"$G={g:g}$ m$^2$ sr")
     # present-day focal plane: effective NET 1 uK sqrt(s), full-sky scan -> 0.65 m/s per day (white noise only)
     ax.loglog(tau / 86400, 0.65 * np.sqrt(86400 / tau), color="tab:red", lw=1.2,
               label="Today, NET$_{\\rm eff}$=1 $\\mu$K$\\sqrt{\\rm s}$ (white only)")
-    for y, lab in [(1.79, "1$^{\\prime\\prime}$ pointing"), (0.37, "1 ppm gain"), (0.0018, "1 mas pointing")]:
+    for y, lab, x, ha in [(1.79, "1$^{\\prime\\prime}$ pointing", 27, "right"), (0.37, "1 ppm gain", 27, "right"),
+                          (0.0018, "1 mas pointing", 0.0075, "left")]:
         ax.axhline(y, color="tab:blue", lw=0.6, alpha=0.7)
-        ax.text(0.0075, y * 1.12, lab, color="tab:blue", fontsize=6)
+        ax.text(x, y * 1.12, lab, color="tab:blue", fontsize=6, ha=ha)
     ax.set_xlabel("Integration time [days]")
     ax.set_ylabel("$\\sigma_v$ per axis [m/s]")
     ax.set_xlim(tau[0] / 86400, 30)
     ax.set_ylim(1e-3, 20)
-    ax.legend(fontsize=5.5, loc="upper right", frameon=False)
+    ax.legend(fontsize=5.5, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=2, frameon=False,
+              columnspacing=1.0, handlelength=2.2)
     ax.grid(alpha=0.2, which="both", lw=0.3)
     fig.tight_layout()
     save(fig, "fig_photon_limit")
@@ -254,7 +256,7 @@ def fig_consistency():
     ax = axs[1]
     order = [("dyn", "Dyn. only"), ("today", "CMB present"), ("req", "CMB req."), ("ratio", "CMB ratio"),
              ("metro", "CMB metrol."), ("limit", "CMB limit"), ("imu", "IMU"), ("xnav", "XNAV")]
-    vals = np.array([np.mean([float(r["nees_mean"]) for r in rows if r["case"] == k and r["filter"] == "ukf"])
+    vals = np.array([np.mean([float(r["nees_full_mean"]) for r in rows if r["case"] == k and r["filter"] == "ukf"])
                      for k, _ in order]) / 3.0
     y = np.arange(len(order))
     cols = ["#d62728" if v > 1.5 else "#1f77b4" for v in vals]
@@ -263,7 +265,7 @@ def fig_consistency():
         ax.text(max(v, 1.0) + 0.05, yi, f"{v:.2f}", va="center", fontsize=5.8)
     ax.axvline(1, color="0.3", lw=0.8, ls=(0, (4, 2)))
     ax.text(1.03, -0.62, "consistent = 1", fontsize=5.8, color="0.3", va="center")
-    ax.text(2.25, 1.3, "filter\noptimistic", fontsize=5.8, color="#d62728", ha="center")
+    ax.text(2.25, 1.3, "filter\noverconfident", fontsize=5.8, color="#d62728", ha="center")
     ax.set_yticks(y)
     ax.set_yticklabels([o[1] for o in order], fontsize=6)
     ax.set_ylim(len(order) - 0.5, -1.0)

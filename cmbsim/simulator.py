@@ -90,6 +90,8 @@ class Config:
     obs_analysis: bool = True        # observability analysis (Fisher information, once per day)
     filter_type: str = "ukf"         # 'ukf' | 'ekf' (numerical Jacobians) | 'pf' (Gaussian particle, UKF proposal)
     pf_particles: int = 1000         # particles per update in 'pf'
+    rel_truth: bool = False          # relativistic composition of the solar and spacecraft velocities in the truth
+    rel_filter: bool = False         # ... and in the on-board model (default: Galilean sum in both)
     allow_fallback: bool = False     # if a requested component cannot run (missing package or data file), raise an
                                      # error (default) or, if True, fall back to the reduced model with a warning
     # electric propulsion (continuous thrust along the velocity, in arcs)
@@ -1073,7 +1075,8 @@ def run(cfg: Config, progress=None) -> Results:
         lin_F = mk_lin(1.0 + band_delta) if cfg.lin_correct else None
     noise_factor = skymaps.combo_noise_factor(sep_w)
     # chopper: noise becomes white with the 1/f density at the modulation frequency, S(f_m) = 2NET²(1 + (f_k/f_m)^α),
-    # times the modulation penalty; the slow detector drift vanishes (the load drift remains, not modeled)
+    # times the modulation penalty; the slow detector drift vanishes (the reference-load drift is modeled separately,
+    # load_drift_nK)
     chop_on = bool(cfg.cmb_on and cfg.chop_hz > 0)
     mod_factor = 1.0
     if chop_on:
@@ -1621,7 +1624,10 @@ def run(cfg: Config, progress=None) -> Results:
         return xm, F
 
     def h_cmb(Xs, tk):
-        v = Xs[:, 3:6] + vssb_nom + Xs[:, 11:14] + hold.get("vsun", 0.0)
+        if cfg.rel_filter:
+            v = ph.compose_velocity(vssb_nom + Xs[:, 11:14], Xs[:, 3:6] + hold.get("vsun", 0.0), True)
+        else:
+            v = Xs[:, 3:6] + vssb_nom + Xs[:, 11:14] + hold.get("vsun", 0.0)
         if est_att:
             db_ = (Xs[:, IAm] + Xs[:, IAd]) * ph.ARCSEC
             m = geom.model_att(v, Xs[:, 6], np.zeros_like(db_), db_)
@@ -1678,6 +1684,7 @@ def run(cfg: Config, progress=None) -> Results:
     f.update = _timed(f.update, "upd")
 
     out_t, out_k, out_xt, out_xe, out_P, out_xd, out_b = [], [], [], [], [], [], []
+    out_Pv = []                                   # 3×3 velocity block of the covariance (full NEES)
     cmb_t, cmb_T, snap_err, sun_ang = [], [], [], []
     v_guess = Xg[0, 3:] + vssb_nom
     sub = np.linspace(-0.5, 0.5, 21)
@@ -1687,6 +1694,7 @@ def run(cfg: Config, progress=None) -> Results:
         xt = G([tk])[0]
         out_t.append(tk); out_k.append(kind); out_xt.append(xt)
         out_xe.append(f.x.copy()); out_P.append(np.diag(f.P).copy()); out_xd.append(xdyn.copy())
+        out_Pv.append(f.P[3:6, 3:6].copy())
         out_b.append(np.asarray(PT["blist"][0]).copy())
 
     def reset_bias():
@@ -1880,6 +1888,11 @@ def run(cfg: Config, progress=None) -> Results:
             xt = G([tk])[0]
             sun = ph.unit(-xt[:3])
             vsun_k = ph.sun_bary_velocity(jd0 + tk / ph.DAY)      # Sun → barycenter (truth and filter)
+
+            def v_obs_true(v_helio, vsun_k=vsun_k):
+                if cfg.rel_truth:
+                    return ph.compose_velocity(vssb_true, v_helio + vsun_k, True)
+                return v_helio + vssb_true + vsun_k
             hold["vsun"] = vsun_k
             if NPREC > 1:                            # stepped precession: next orientation on the cone
                 PT["kc"] = (PT["kc"] + 1) % NPREC
@@ -1897,7 +1910,8 @@ def run(cfg: Config, progress=None) -> Results:
             xs = G(tk + sub * tau)
             R_k = geom.R
             if att is None:
-                z_avg = geom.model(xs[:, 3:] + vssb_true + vsun_k, np.full(len(xs), T0_true), truth=True).mean(0)
+                z_avg = geom.model(v_obs_true(xs[:, 3:]), np.full(len(xs), T0_true),
+                                   truth=True).mean(0)
             else:
                 smp = att.sample(tk, xs[0, :3], jd0 + tk / ph.DAY)
                 if smp is None:                      # not enough stars: no attitude, no measurement
@@ -1906,7 +1920,7 @@ def run(cfg: Config, progress=None) -> Results:
                     continue
                 w_i, lf_b, mis_b, cov_w = smp
                 ns = len(xs)
-                z_avg = geom.model_att(xs[:, 3:] + vssb_true + vsun_k, np.full(ns, T0_true), np.tile(w_i, (ns, 1)),
+                z_avg = geom.model_att(v_obs_true(xs[:, 3:]), np.full(ns, T0_true), np.tile(w_i, (ns, 1)),
                                        np.tile(lf_b + mis_b, (ns, 1)), truth=True).mean(0)
                 if hold.get("J_geom") is not geom or tk - hold["J_t"] > 0.5 * ph.DAY:
                     # Jacobians change slowly (direction of v): recomputed twice per day or on re-pointing
@@ -1930,7 +1944,7 @@ def run(cfg: Config, progress=None) -> Results:
             day_ = tk / ph.DAY
             v_true_sc = xt[3:]
             if lin_T is not None:                  # linearization effect and what remains after the on-board model
-                vt_ = np.atleast_2d(xt[3:] + vssb_true + vsun_k)
+                vt_ = np.atleast_2d(v_obs_true(xt[3:]))
                 T0a_ = np.array([T0_true])
                 zl_ = geom.model(vt_, T0a_, truth=True)[0]
                 zf_ = geom.model(vt_, T0a_)[0]
@@ -2170,6 +2184,7 @@ def run(cfg: Config, progress=None) -> Results:
                               drift=np.array(drift_rec) * 1e6) if flick is not None else None),
                 att=dict(att_info, n_coast=att.n_coast, n_reduced=att.n_reduced, catalog=cfg.st_catalog,
                          ident=cfg.st_ident, **{k_: np.array(v_) for k_, v_ in att_rec.items()}) if att is not None else None)
+    info["P_vel"] = np.array(out_Pv)
     info["components"] = dict(ephem=ph.EPHEM["source"], sky_real=sky is not None, zodi=zd is not None,
                               fallbacks=missing)
     if isinstance(f, GPF):
